@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:php8.1-fpm
+    container_name: wp_cv_container
+    environment:
+      WORDPRESS_DB_HOST: db:3306 # Indirizzo del database
+      WORDPRESS_DB_NAME: wp_cv
+      WORDPRESS_DB_USER: sergio
+      WORDPRESS_DB_PASSWORD: mercatello
+    volumes:
+      - wp_cv_data:/var/www/html
+    restart: always
+    mem_limit: 4g
+    cpus: 2.0
+
+  db:
+    image: mysql:8.0
+    container_name: wp_cv_db
+    environment:
+      MYSQL_ROOT_PASSWORD: local
+      MYSQL_DATABASE: wp_cv
+      MYSQL_USER: sergio
+      MYSQL_PASSWORD: mercatello
+    #ports:
+    #  - "3306:3306" # phpMyAdmin sarà accessibile sulla porta 8080  
+    volumes:
+      - wp_mysql_cv_data:/var/lib/mysql
+    restart: always
+    mem_limit: 3g
+    cpus: 2.0
+
+  nginx:
+    image: nginx:alpine
+    container_name: wp_cv_nginx
+    depends_on:
+      - wordpress
+    volumes:
+      - ./nginx_conf:/etc/nginx/conf.d # Configurazione Nginx
+      - wp_cv_data:/var/www/html # Collegamento ai file di WordPress
+    ports:
+      - "8001:80" # Nginx usa la porta 80 dell'host
+    restart: always
+    mem_limit: 1g
+    cpus: 1.0
+
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wp_cv_phpmyadmin
+    environment:
+      PMA_HOST: db
+      PMA_USER: sergio
+      PMA_PASSWORD: mercatello
+    ports:
+      - "8081:80" # phpMyAdmin sarà accessibile sulla porta 8080
+    depends_on:
+      - db
+    restart: always  
+
+volumes:
+  wp_cv_data:
+  wp_mysql_cv_data:
+
